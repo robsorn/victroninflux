@@ -1,10 +1,3 @@
-# RK 20190606 V1.1.0
-# Reads serial input from a victron mppt device (VE.Direct protocol),
-# and sends those data to a local influx database.
-# Is designed for MPPT chargers only.
-# However, if you intend to read data from other devices,
-# refer to victrons VE.Direct protocol white paper
-# and integrate the missing (if any) record key/values.
 import datetime
 import serial
 import time
