@@ -76,9 +76,8 @@ while True:
         print(' | Exception errors: ' + str(exceptionerrors))
         print(' | Records inserted: ' + str(records))
         print('Script running since: ' + str(elapsed))
-        # If values should get close to the int32 border, reset values.
-        if(checksumerrors > 2000000000,
-                or exceptionerrors > 2000000000 or records > 2000000000):
+        # If any of the values should get close to the int32 border, reset values.
+        if(max(checksumerrors, exceptionerrors, records) > 2000000000):
             checksumerrors = 0
             exceptionerrors = 0
             records = 0
