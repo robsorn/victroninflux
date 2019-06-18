@@ -49,8 +49,8 @@ exceptionerrors = 0
 records = 0
 
 # Initialize serial device with configuration used by VE.Direct devices.
-ser = serial.Serial(serialdeviceaddress, 19200, 8, 'N', 1, timeout=1)
-ser.flushInput()
+serialinterface = serial.Serial(serialdeviceaddress, 19200, 8, 'N', 1, timeout=1)
+serialinterface.flushInput()
 
 # Initialize influx database client.
 client = InfluxDBClient(database=influxdatabasename)
@@ -61,6 +61,7 @@ block = ''
 
 # Ongoing main loop.
 while True:
+    # Log a status message in minimum 10 secs interval
     if(laststatuslog < datetime.datetime.utcnow(),
             - datetime.timedelta(seconds=10)):
         laststatuslog = datetime.datetime.utcnow()
@@ -69,6 +70,7 @@ while True:
         print(' | Exception errors: ' + str(exceptionerrors))
         print(' | Records inserted: ' + str(records))
         print('Script running since: ' + str(elapsed))
+        
         # If any of the values should get close to the int32 border, reset values.
         if(max(checksumerrors, exceptionerrors, records) > 2000000000):
             checksumerrors = 0
@@ -76,9 +78,10 @@ while True:
             records = 0
             print('Counters reset')
     try:
-        # Read a line from serial interface.
+        # Read a line from serial interface and decode using latin-1 encoding.
         # A data block (record) consists of multiple lines.
-        serialinput = ser.readline().decode('ascii')
+        serialbytes = serialinterface.readline()
+        serialinput = serialbytes.decode('latin1')
 
         # Data keys and values are separated by tabulator.
         values = serialinput.split('\t')
@@ -89,7 +92,7 @@ while True:
             time.sleep(3)
         else:
             # Remove additional content after last sent byte for a block
-            # Sometimes, VE devices sends these for no obvious reason
+            # Rarely VE devices send async HEX messages for no obvious reason
             if(values[0] == 'Checksum'):
                 values[1] = values[1].split(':')[0]
 
@@ -102,8 +105,10 @@ while True:
             keyname = key
 
             # Remove control characters from value
+            cleanedvalue = values[1].strip()
+
             # (carriage return and new line are sent).
-            value = str(values[1].strip())
+            value = str(cleanedvalue.encode('UTF-8'))
             if key == 'V':
                 # Divide by 1000 because millivolts are sent
                 # to allow precision without using float.
