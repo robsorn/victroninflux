@@ -39,6 +39,9 @@ while True:
     try:
         # Evaluate values using psutil and build influx object
         influx["fields"]["CPU Load"] = psutil.cpu_percent(interval=0.3)
+        netiocounters = psutil.net_io_counters(pernic=False)
+        influx["fields"]["Bytes Sent"] = netiocounters.bytes_sent
+        influx["fields"]["Bytes Received"] = netiocounters.bytes_recv
         influx["fields"]["RAM Usage"] = psutil.virtual_memory().percent
         influx["fields"]["CPU Temp"] = psutil.sensors_temperatures()['cpu-thermal'][0].current
         influx["fields"]["Disk Usage"] = psutil.disk_usage('/').percent
